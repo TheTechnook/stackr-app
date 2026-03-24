@@ -1,0 +1,1179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Stackr — The social platform built for developers. Share your stack, your builds, your thinking.">
+  <meta property="og:title" content="Stackr">
+  <meta property="og:description" content="The developer social platform. Share repos, workflows, and ideas with builders worldwide.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#080810">
+  <title>Stackr — Built for Developers</title>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ═══════════════════════════════════════════════════════════
+  TOAST CONTAINER
+═══════════════════════════════════════════════════════════ -->
+<div id="toast-container" aria-live="polite"></div>
+
+<!-- ═══════════════════════════════════════════════════════════
+  PAGE: LANDING
+═══════════════════════════════════════════════════════════ -->
+<div id="page-landing" class="page active">
+
+  <!-- Nav -->
+  <nav class="landing-nav">
+    <div class="landing-logo">
+      <div class="landing-logo-mark">S/</div>
+      Stackr
+    </div>
+    <div class="flex gap-2 items-center">
+      <button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Sign in</button>
+      <button class="btn btn-primary btn-sm btn-pill" onclick="openAuthModal('signup')">Get started</button>
+    </div>
+  </nav>
+
+  <!-- Hero -->
+  <section class="hero">
+    <div class="hero-eyebrow">
+      <span class="hero-eyebrow-dot"></span>
+      The developer social platform
+    </div>
+    <h1>Your stack.<br>Your <span class="accent">community.</span></h1>
+    <p class="hero-sub">
+      Share what you're building, connect with developers worldwide, explore GitHub repos,
+      and collaborate in spaces built for people who write code.
+    </p>
+    <div class="hero-ctas">
+      <button class="btn btn-primary btn-xl btn-pill" onclick="openAuthModal('signup')">
+        Join with GitHub &nbsp;→
+      </button>
+      <button class="btn btn-secondary btn-xl btn-pill" onclick="enterGuest()">
+        Browse as guest
+      </button>
+    </div>
+    <p class="hero-social-proof">Free forever · No paywalls · No algorithms</p>
+  </section>
+
+  <!-- Features -->
+  <section class="features">
+    <div class="features-title">
+      <p class="label" style="text-align:center;margin-bottom:.75rem">Everything you need</p>
+      <h2 style="text-align:center;color:var(--text)">Built by devs, for devs</h2>
+    </div>
+    <div class="features-grid">
+      <div class="feature-card">
+        <div class="feature-icon">🐙</div>
+        <div class="feature-title">GitHub Native</div>
+        <div class="feature-desc">Sign in with GitHub. Your repos, avatar, and bio sync automatically. Share any repo as a rich card.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">⚙️</div>
+        <div class="feature-title">Workflow Posts</div>
+        <div class="feature-desc">Share how you built something — structured cards with stack, steps, tools, and lessons learned.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔭</div>
+        <div class="feature-title">Vibe Search</div>
+        <div class="feature-desc">Search "react dev" and find people, workspaces, and posts all at once. Click any tag to explore.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🏢</div>
+        <div class="feature-title">Workspaces</div>
+        <div class="feature-desc">Public or private spaces for teams, open source projects, or study groups. Posts, discussions, and resources in one place.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🔗</div>
+        <div class="feature-title">Rich Link Sharing</div>
+        <div class="feature-desc">Paste any URL — YouTube, X, dev.to, Medium, Loom — and get a beautiful preview card automatically.</div>
+      </div>
+      <div class="feature-card">
+        <div class="feature-icon">🤖</div>
+        <div class="feature-title">AI Moderated</div>
+        <div class="feature-desc">Every post is reviewed by AI before it goes live. Safe for devs, context-aware — security research is welcome.</div>
+      </div>
+    </div>
+  </section>
+
+</div><!-- end landing -->
+
+<!-- ═══════════════════════════════════════════════════════════
+  APP SHELL
+═══════════════════════════════════════════════════════════ -->
+<div id="page-feed" class="page">
+<div class="app-shell">
+
+  <!-- ── SIDEBAR ──────────────────────────────────────────── -->
+  <aside class="sidebar" id="sidebar">
+
+    <div class="sidebar-logo">
+      <div class="sidebar-logo-mark">S/</div>
+      <div class="sidebar-logo-text">Stack<span>r</span></div>
+    </div>
+
+    <nav id="main-nav">
+      <div class="nav-item active" data-page="feed" onclick="sNav('feed'); loadFeed()">
+        <span class="nav-icon">🏠</span> Home
+      </div>
+      <div class="nav-item" data-page="explore" onclick="sNav('explore'); initExplore()">
+        <span class="nav-icon">🔭</span> Explore
+      </div>
+      <div class="nav-item member-only-nav" data-page="notifications" onclick="sNav('notifications'); loadNotifications()">
+        <span class="nav-icon">🔔</span> Notifications
+        <span class="nav-badge hidden" id="notif-badge">0</span>
+      </div>
+      <div class="nav-item member-only-nav" data-page="messages" onclick="sNav('messages'); loadMessages()">
+        <span class="nav-icon">💬</span> Messages
+        <span class="nav-badge hidden" id="msg-badge">0</span>
+      </div>
+
+      <div class="nav-section-label">Community</div>
+      <div class="nav-item" data-page="workspaces" onclick="sNav('workspaces'); loadWorkspaces()">
+        <span class="nav-icon">🏢</span> Workspaces
+      </div>
+      <div class="nav-item" data-page="discussions" onclick="sNav('discussions'); loadDiscussions()">
+        <span class="nav-icon">🧵</span> Discussions
+      </div>
+      <div class="nav-item" data-page="bookmarks" onclick="sNav('bookmarks'); loadBookmarks()">
+        <span class="nav-icon">🔖</span> Bookmarks
+      </div>
+
+      <div class="nav-section-label hidden" id="nav-admin-section">Admin</div>
+      <div class="nav-item hidden" id="nav-admin-item" data-page="admin" onclick="sNav('admin'); loadAdminDashboard()">
+        <span class="nav-icon">⚙️</span> Dashboard
+      </div>
+    </nav>
+
+    <div class="sidebar-footer">
+      <div class="sidebar-user" id="sidebar-user" onclick="goToOwnProfile()">
+        <div id="sidebar-avatar">
+          <div class="avatar avatar-sm" style="background:var(--bg3);color:var(--text3)">?</div>
+        </div>
+        <div class="sidebar-user-info">
+          <div class="sidebar-user-name truncate" id="sidebar-name">Guest</div>
+          <div class="sidebar-user-role" id="sidebar-role">browsing only</div>
+        </div>
+        <button class="btn btn-icon sm" style="margin-left:auto;flex-shrink:0"
+          onclick="event.stopPropagation(); signOut()" title="Sign out" id="signout-btn">
+          ↩
+        </button>
+      </div>
+    </div>
+
+  </aside>
+
+  <!-- ── MAIN AREA ─────────────────────────────────────────── -->
+  <main class="feed-area" id="main-area">
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: FEED                               ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-feed" class="section-panel">
+
+      <div class="topnav">
+        <span class="topnav-title">Home</span>
+        <button class="btn btn-primary btn-sm" onclick="focusComposer()">+ Post</button>
+      </div>
+
+      <!-- Guest banner -->
+      <div class="guest-banner hidden" id="guest-banner">
+        <div class="guest-banner-text">
+          <strong>You're browsing as a guest.</strong> Sign up to post, follow developers, and join workspaces.
+        </div>
+        <button class="btn btn-primary btn-sm btn-pill" onclick="openAuthModal('signup')">Join free</button>
+      </div>
+
+      <!-- Feed tabs -->
+      <div class="feed-tabs">
+        <div class="feed-tab active" onclick="loadFeed('for-you', this)">For you</div>
+        <div class="feed-tab" onclick="loadFeed('following', this)">Following</div>
+        <div class="feed-tab" onclick="loadFeed('repos', this)">Repos</div>
+        <div class="feed-tab" onclick="loadFeed('workflows', this)">Workflows</div>
+      </div>
+
+      <!-- Composer -->
+      <div class="composer" id="composer-wrap">
+        <div class="composer-inner">
+          <div id="composer-avatar">
+            <div class="avatar avatar-md" style="background:var(--bg3)">?</div>
+          </div>
+          <div class="composer-body">
+            <textarea
+              id="composer-text"
+              class="composer-textarea"
+              placeholder="What are you building? Share a repo, workflow, or thought…"
+              maxlength="2000"
+              rows="1"
+              oninput="autoResizeTextarea(this); updateCharCount(this)"
+            ></textarea>
+
+            <!-- Tag input -->
+            <div id="tag-input-area" class="tag-input-wrapper" style="display:none">
+              <span style="font-family:var(--font-mono);font-size:.75rem;color:var(--text3)">#</span>
+              <div id="tag-chips"></div>
+              <input id="tag-input" class="tag-input" placeholder="add tags…" maxlength="30"
+                onkeydown="handleTagInput(event)">
+            </div>
+
+            <!-- Post type previews -->
+            <div id="link-preview-wrap" class="composer-preview hidden">
+              <button class="composer-preview-close" onclick="clearLinkPreview()">×</button>
+              <div id="link-preview-content"></div>
+            </div>
+            <div id="upload-preview" class="composer-preview hidden">
+              <button class="composer-preview-close" onclick="clearUpload()">×</button>
+              <div id="upload-preview-content"></div>
+            </div>
+            <div id="workflow-preview" class="composer-preview hidden">
+              <button class="composer-preview-close" onclick="clearWorkflow()">×</button>
+              <div id="workflow-preview-content"></div>
+            </div>
+            <div id="poll-preview" class="composer-preview hidden">
+              <button class="composer-preview-close" onclick="clearPoll()">×</button>
+              <div id="poll-preview-content"></div>
+            </div>
+
+            <div class="composer-divider"></div>
+
+            <!-- Post type chips -->
+            <div class="post-type-bar">
+              <div class="post-type-chip" onclick="triggerFileUpload('image')" title="Image">
+                🖼️ Image
+              </div>
+              <div class="post-type-chip" onclick="openWorkflowModal()" title="Workflow">
+                ⚙️ Workflow
+              </div>
+              <div class="post-type-chip" onclick="openPollModal()" title="Poll">
+                📊 Poll
+              </div>
+              <div class="post-type-chip" onclick="openGitHubRepoModal()" title="Share Repo">
+                🐙 Repo
+              </div>
+              <div class="post-type-chip" onclick="toggleTagInput()" title="Tags" id="tag-chip-btn">
+                🏷️ Tags
+              </div>
+            </div>
+
+            <div class="composer-toolbar">
+              <span class="char-count" id="char-count">2000</span>
+              <div class="composer-actions">
+                <button class="btn btn-ghost btn-sm" onclick="openAiAssist()" title="AI writing assistant">
+                  ✨ Assist
+                </button>
+                <button class="btn btn-primary btn-sm" id="post-submit-btn" onclick="submitPost()">
+                  Post
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Hidden file input -->
+        <input type="file" id="file-input" class="hidden"
+          accept="image/*,video/mp4,video/webm,.pdf,.doc,.docx"
+          onchange="handleFileSelect(this)">
+      </div>
+
+      <!-- Feed posts -->
+      <div id="feed-posts"></div>
+
+      <!-- Load more -->
+      <div id="load-more-wrap" class="hidden" style="padding:1.25rem;text-align:center">
+        <button class="btn btn-secondary" onclick="loadFeed(App.feedTab, null, true)">Load more</button>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: EXPLORE / VIBE SEARCH              ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-explore" class="section-panel hidden">
+
+      <div class="topnav">
+        <span class="topnav-title">Explore</span>
+      </div>
+
+      <div class="search-bar-wrap">
+        <div class="search-bar">
+          <span class="search-icon">🔍</span>
+          <input
+            id="explore-search"
+            type="text"
+            placeholder="Search developers, repos, workspaces, tags…"
+            oninput="debounceSearch(this.value)"
+            autocomplete="off"
+          >
+          <button class="btn btn-ghost btn-sm" onclick="clearSearch()" id="search-clear" style="display:none">✕</button>
+        </div>
+      </div>
+
+      <!-- Vibe quick tags -->
+      <div class="vibe-tags" id="vibe-tags">
+        <div class="vibe-tag active" onclick="vibeSearch('', this)">✦ All</div>
+        <div class="vibe-tag" onclick="vibeSearch('react', this)">#react</div>
+        <div class="vibe-tag" onclick="vibeSearch('python', this)">#python</div>
+        <div class="vibe-tag" onclick="vibeSearch('devops', this)">#devops</div>
+        <div class="vibe-tag" onclick="vibeSearch('ai', this)">#ai</div>
+        <div class="vibe-tag" onclick="vibeSearch('typescript', this)">#typescript</div>
+        <div class="vibe-tag" onclick="vibeSearch('mobile', this)">#mobile</div>
+        <div class="vibe-tag" onclick="vibeSearch('security', this)">#security</div>
+        <div class="vibe-tag" onclick="vibeSearch('opensource', this)">#opensource</div>
+        <div class="vibe-tag" onclick="vibeSearch('golang', this)">#golang</div>
+        <div class="vibe-tag" onclick="vibeSearch('rust', this)">#rust</div>
+      </div>
+
+      <!-- Vibe results: 3 columns -->
+      <div class="vibe-results" id="vibe-results">
+        <div class="vibe-column" id="vibe-people">
+          <div class="vibe-column-title">👤 People</div>
+          <div id="vibe-people-list"></div>
+        </div>
+        <div class="vibe-column" id="vibe-spaces">
+          <div class="vibe-column-title">🏢 Workspaces</div>
+          <div id="vibe-workspaces-list"></div>
+        </div>
+        <div class="vibe-column" id="vibe-posts-col">
+          <div class="vibe-column-title">📝 Posts</div>
+          <div id="vibe-posts-list"></div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: NOTIFICATIONS                      ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-notifications" class="section-panel hidden">
+
+      <div class="topnav">
+        <span class="topnav-title">Notifications</span>
+        <button class="btn btn-ghost btn-sm" onclick="markAllNotifsRead()">Mark all read</button>
+      </div>
+
+      <div class="notif-tabs">
+        <div class="feed-tab active" onclick="loadNotifications('all', this)">All</div>
+        <div class="feed-tab" onclick="loadNotifications('mention', this)">Mentions</div>
+        <div class="feed-tab" onclick="loadNotifications('follow', this)">Follows</div>
+        <div class="feed-tab" onclick="loadNotifications('workspace', this)">Workspaces</div>
+      </div>
+
+      <div id="notif-list"></div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: MESSAGES                           ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-messages" class="section-panel hidden" style="padding:0">
+
+      <div class="topnav" style="border-bottom:none">
+        <span class="topnav-title">Messages</span>
+        <button class="btn btn-ghost btn-sm" onclick="openNewMessageModal()">+ New</button>
+      </div>
+
+      <div class="messages-layout" style="height:calc(100vh - 56px)">
+
+        <!-- Conversations list -->
+        <div class="messages-sidebar">
+          <div class="messages-sidebar-search">
+            <div class="search-bar" style="padding:.45rem .85rem">
+              <span class="search-icon" style="font-size:.85rem">🔍</span>
+              <input type="text" placeholder="Search conversations…"
+                style="flex:1;background:none;border:none;color:var(--text);font-size:.85rem;font-family:var(--font-body)"
+                oninput="filterConversations(this.value)">
+            </div>
+          </div>
+          <div class="messages-list" id="conversations-list"></div>
+        </div>
+
+        <!-- Chat area -->
+        <div class="chat-area" id="chat-area">
+          <!-- Empty state -->
+          <div class="empty-state" id="chat-empty" style="margin:auto">
+            <div class="empty-state-icon">💬</div>
+            <h3>Your messages</h3>
+            <p>Select a conversation or start a new one. Both of you need to follow each other to message.</p>
+          </div>
+          <!-- Chat view (hidden until conversation selected) -->
+          <div id="chat-view" class="hidden" style="display:flex;flex-direction:column;height:100%">
+            <div class="chat-header" id="chat-header"></div>
+            <div class="chat-messages" id="chat-messages"></div>
+            <div class="chat-composer">
+              <textarea
+                id="chat-input"
+                class="chat-input"
+                placeholder="Message…"
+                rows="1"
+                maxlength="2000"
+                oninput="autoResizeTextarea(this)"
+                onkeydown="handleChatKeydown(event)"
+              ></textarea>
+              <button class="btn btn-primary" onclick="sendMessage()" style="flex-shrink:0;height:40px">
+                Send
+              </button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: WORKSPACES                         ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-workspaces" class="section-panel hidden">
+
+      <div class="topnav">
+        <span class="topnav-title">Workspaces</span>
+        <button class="btn btn-primary btn-sm member-only-btn" onclick="openCreateWorkspaceModal()">+ Create</button>
+      </div>
+
+      <!-- My workspaces / Discover tabs -->
+      <div class="feed-tabs">
+        <div class="feed-tab active" onclick="loadWorkspaces('discover', this)">Discover</div>
+        <div class="feed-tab" onclick="loadWorkspaces('mine', this)">My workspaces</div>
+      </div>
+
+      <div id="workspaces-list"></div>
+
+      <!-- WORKSPACE INNER VIEW (shown when a workspace is opened) -->
+      <div id="workspace-view" class="hidden">
+        <div class="workspace-header" id="workspace-view-header"></div>
+        <div class="workspace-inner-tabs" id="workspace-inner-tabs">
+          <div class="feed-tab active" onclick="loadWorkspaceTab('posts', this)">Posts</div>
+          <div class="feed-tab" onclick="loadWorkspaceTab('discussions', this)">Discussions</div>
+          <div class="feed-tab" onclick="loadWorkspaceTab('resources', this)">Resources</div>
+          <div class="feed-tab" onclick="loadWorkspaceTab('members', this)">Members</div>
+        </div>
+        <div id="workspace-tab-content"></div>
+      </div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: DISCUSSIONS                        ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-discussions" class="section-panel hidden">
+
+      <div class="topnav">
+        <span class="topnav-title">Discussions</span>
+        <button class="btn btn-primary btn-sm member-only-btn" onclick="openNewThreadModal()">+ Thread</button>
+      </div>
+
+      <div class="thread-category-bar" id="thread-categories">
+        <div class="vibe-tag active" onclick="loadDiscussions('all', this)">All</div>
+        <div class="vibe-tag" onclick="loadDiscussions('Web Dev', this)">Web Dev</div>
+        <div class="vibe-tag" onclick="loadDiscussions('Mobile', this)">Mobile</div>
+        <div class="vibe-tag" onclick="loadDiscussions('AI & ML', this)">AI & ML</div>
+        <div class="vibe-tag" onclick="loadDiscussions('DevOps', this)">DevOps</div>
+        <div class="vibe-tag" onclick="loadDiscussions('Security', this)">Security</div>
+        <div class="vibe-tag" onclick="loadDiscussions('Open Source', this)">Open Source</div>
+        <div class="vibe-tag" onclick="loadDiscussions('Career', this)">Career</div>
+        <div class="vibe-tag" onclick="loadDiscussions('General', this)">General</div>
+      </div>
+
+      <div id="threads-list"></div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: BOOKMARKS                          ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-bookmarks" class="section-panel hidden">
+      <div class="topnav">
+        <span class="topnav-title">Bookmarks</span>
+      </div>
+      <div id="bookmarks-list"></div>
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: PROFILE                            ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-profile" class="section-panel hidden">
+
+      <div class="topnav">
+        <button class="btn btn-ghost btn-sm" onclick="goBack()">← Back</button>
+        <span class="topnav-title" id="profile-topnav-name"></span>
+        <div class="dropdown" id="profile-menu-wrap">
+          <button class="btn btn-icon" onclick="toggleDropdown('profile-actions-menu')">⋯</button>
+          <div class="dropdown-menu" id="profile-actions-menu">
+            <div class="dropdown-item" onclick="copyProfileLink()">🔗 Copy profile link</div>
+            <div class="dropdown-divider"></div>
+            <div class="dropdown-item danger" id="profile-report-btn" onclick="reportUser()">🚨 Report user</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-cover" id="profile-cover"></div>
+
+      <div class="profile-header">
+        <div class="profile-avatar-wrap">
+          <div id="profile-avatar-large"></div>
+          <div id="profile-action-btns" class="flex gap-2"></div>
+        </div>
+        <div class="profile-name" id="profile-name"></div>
+        <div class="profile-username" id="profile-username"></div>
+        <div class="profile-bio" id="profile-bio"></div>
+        <div class="profile-meta" id="profile-meta"></div>
+        <div class="profile-stack" id="profile-stack"></div>
+        <div class="profile-stats">
+          <div class="profile-stat" onclick="openFollowersModal('followers')">
+            <div class="profile-stat-num" id="profile-followers">0</div>
+            <div class="profile-stat-label">Followers</div>
+          </div>
+          <div class="profile-stat" onclick="openFollowersModal('following')">
+            <div class="profile-stat-num" id="profile-following">0</div>
+            <div class="profile-stat-label">Following</div>
+          </div>
+          <div class="profile-stat">
+            <div class="profile-stat-num" id="profile-posts-count">0</div>
+            <div class="profile-stat-label">Posts</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="profile-tabs">
+        <div class="feed-tab active" onclick="loadProfileTab('posts', this)">Posts</div>
+        <div class="feed-tab" onclick="loadProfileTab('repos', this)">Repos</div>
+        <div class="feed-tab" onclick="loadProfileTab('workspaces', this)">Workspaces</div>
+        <div class="feed-tab" onclick="loadProfileTab('about', this)">About</div>
+      </div>
+
+      <div id="profile-tab-content"></div>
+
+    </section>
+
+    <!-- ╔══════════════════════════════════════════════╗ -->
+    <!-- ║  SECTION: ADMIN DASHBOARD                    ║ -->
+    <!-- ╚══════════════════════════════════════════════╝ -->
+    <section id="section-admin" class="section-panel hidden">
+
+      <div class="topnav">
+        <span class="topnav-title">⚙️ Admin</span>
+      </div>
+
+      <div class="admin-stat-grid" id="admin-stats"></div>
+
+      <div style="padding:1rem 1.5rem;border-bottom:1px solid var(--border);display:flex;gap:.75rem;flex-wrap:wrap">
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminTab('users')">👥 Users</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminTab('reports')">🚨 Reports</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminTab('workspaces')">🏢 Workspaces</button>
+        <button class="btn btn-secondary btn-sm" onclick="loadAdminTab('bot')">🤖 DevPulse Bot</button>
+      </div>
+
+      <div id="admin-content" style="padding:1.5rem"></div>
+
+    </section>
+
+  </main><!-- end main-area -->
+
+  <!-- ── RIGHT PANEL ──────────────────────────────────────── -->
+  <aside class="right-panel" id="right-panel">
+
+    <!-- Search -->
+    <div class="panel-card" style="padding:.75rem">
+      <div class="search-bar" style="border-radius:var(--radius)">
+        <span class="search-icon">🔍</span>
+        <input type="text" placeholder="Search Stackr…"
+          style="flex:1;background:none;border:none;color:var(--text);font-size:.85rem;font-family:var(--font-body)"
+          oninput="quickSearch(this.value)"
+          onfocus="sNav('explore'); initExplore()">
+      </div>
+    </div>
+
+    <!-- Trending tags -->
+    <div class="panel-card" id="trending-panel">
+      <div class="panel-card-title">Trending</div>
+      <div id="trending-tags-list"></div>
+    </div>
+
+    <!-- Suggested people -->
+    <div class="panel-card" id="suggested-panel">
+      <div class="panel-card-title">Who to follow</div>
+      <div id="suggested-people-list"></div>
+    </div>
+
+    <!-- DevPulse bot info -->
+    <div class="panel-card" style="background:var(--accent-l2);border-color:rgba(124,110,255,.15)">
+      <div class="flex items-center gap-2 mb-2">
+        <div class="avatar avatar-sm" style="background:var(--accent);color:#fff;font-family:var(--font-mono);font-size:.7rem">B</div>
+        <div>
+          <div style="font-weight:700;font-size:.85rem">DevPulse</div>
+          <div class="badge badge-bot" style="font-size:.6rem">BOT</div>
+        </div>
+      </div>
+      <p style="font-size:.78rem;color:var(--text2);line-height:1.5">
+        Trending repos, dev tools, and articles — curated daily from GitHub, Hacker News, and dev.to.
+      </p>
+    </div>
+
+  </aside>
+
+</div><!-- end app-shell -->
+</div><!-- end page-feed -->
+
+<!-- ═══════════════════════════════════════════════════════════
+  MOBILE BOTTOM NAV
+═══════════════════════════════════════════════════════════ -->
+<nav class="mobile-nav" id="mobile-nav">
+  <div class="mobile-nav-item active" data-page="feed" onclick="sNav('feed'); loadFeed()">
+    <span class="mn-icon">🏠</span>
+    <span>Home</span>
+  </div>
+  <div class="mobile-nav-item" data-page="explore" onclick="sNav('explore'); initExplore()">
+    <span class="mn-icon">🔭</span>
+    <span>Explore</span>
+  </div>
+  <div class="mobile-nav-item" data-page="workspaces" onclick="sNav('workspaces'); loadWorkspaces()">
+    <span class="mn-icon">🏢</span>
+    <span>Spaces</span>
+  </div>
+  <div class="mobile-nav-item member-only-nav" data-page="notifications" onclick="sNav('notifications'); loadNotifications()">
+    <span class="mn-icon" style="position:relative">
+      🔔
+      <span class="mobile-nav-badge hidden" id="mob-notif-badge">0</span>
+    </span>
+    <span>Alerts</span>
+  </div>
+  <div class="mobile-nav-item" data-page="profile-self" onclick="goToOwnProfile()">
+    <span class="mn-icon">👤</span>
+    <span>Profile</span>
+  </div>
+</nav>
+
+<!-- ═══════════════════════════════════════════════════════════
+  MODALS
+═══════════════════════════════════════════════════════════ -->
+
+<!-- ── AUTH MODAL ─────────────────────────────────────────── -->
+<div id="modal-auth" class="modal-overlay" onclick="closeModalOnBg(event,'modal-auth')">
+  <div class="modal auth-modal">
+    <div class="auth-logo">
+      <div class="auth-logo-mark">S/</div>
+      <div style="font-family:var(--font-display);font-weight:700;font-size:1.1rem;letter-spacing:-.03em">Stackr</div>
+      <div class="auth-tagline">The developer social platform</div>
+    </div>
+
+    <div class="auth-tabs">
+      <div class="auth-tab active" id="auth-tab-signup" onclick="switchAuthTab('signup')">Create account</div>
+      <div class="auth-tab" id="auth-tab-login" onclick="switchAuthTab('login')">Sign in</div>
+    </div>
+
+    <!-- OAuth buttons -->
+    <div class="oauth-grid">
+      <button class="oauth-btn" onclick="signInWithGitHub()">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.374 0 0 5.373 0 12c0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23A11.509 11.509 0 0 1 12 5.803c1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.84 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576C20.566 21.797 24 17.3 24 12c0-6.627-5.373-12-12-12z"/></svg>
+        GitHub
+      </button>
+      <button class="oauth-btn" onclick="signInWithGoogle()">
+        <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+        Google
+      </button>
+    </div>
+
+    <div class="auth-divider">or continue with email</div>
+
+    <!-- Signup form -->
+    <div id="auth-signup-form">
+      <div class="form-group">
+        <label>Full name</label>
+        <input type="text" id="signup-name" class="form-control" placeholder="Ada Lovelace" autocomplete="name">
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="signup-email" class="form-control" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="signup-password" class="form-control" placeholder="Min 8 characters" autocomplete="new-password">
+      </div>
+      <button class="btn btn-primary w-full" onclick="signUpWithEmail()" id="signup-btn">Create account</button>
+      <p style="font-size:.75rem;color:var(--text3);text-align:center;margin-top:.85rem;line-height:1.5">
+        By joining you agree to keep it civil. No spam, no hate, no malware.
+      </p>
+    </div>
+
+    <!-- Login form -->
+    <div id="auth-login-form" class="hidden">
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="login-email" class="form-control" placeholder="you@example.com" autocomplete="email">
+      </div>
+      <div class="form-group">
+        <label>Password</label>
+        <input type="password" id="login-password" class="form-control" placeholder="Your password" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary w-full" onclick="signInWithEmail()" id="login-btn">Sign in</button>
+      <p style="text-align:center;margin-top:.75rem">
+        <span class="text-faint text-sm">Forgot password? </span>
+        <span class="text-accent text-sm cursor-pointer" onclick="sendPasswordReset()">Reset it</span>
+      </p>
+    </div>
+
+  </div>
+</div>
+
+<!-- ── ONBOARDING MODAL ────────────────────────────────────── -->
+<div id="modal-onboarding" class="modal-overlay">
+  <div class="modal">
+    <div class="onboarding-steps">
+      <div class="onboarding-step active" id="ob-step-1"></div>
+      <div class="onboarding-step" id="ob-step-2"></div>
+      <div class="onboarding-step" id="ob-step-3"></div>
+    </div>
+    <div id="onboarding-content"></div>
+  </div>
+</div>
+
+<!-- ── WORKFLOW COMPOSER MODAL ────────────────────────────── -->
+<div id="modal-workflow" class="modal-overlay" onclick="closeModalOnBg(event,'modal-workflow')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">⚙️ Share a Workflow</span>
+      <button class="modal-close" onclick="closeModal('modal-workflow')">×</button>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Project name</label>
+        <input type="text" id="wf-name" class="form-control" placeholder="My REST API" maxlength="80">
+      </div>
+      <div class="form-group">
+        <label>Time taken</label>
+        <input type="text" id="wf-time" class="form-control" placeholder="3 weeks solo" maxlength="40">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>One-line description</label>
+      <input type="text" id="wf-tagline" class="form-control" placeholder="What does it do?" maxlength="120">
+    </div>
+    <div class="form-group">
+      <label>Tech stack (press Enter to add)</label>
+      <div class="tag-input-wrapper" style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:.6rem .85rem">
+        <div id="wf-stack-chips"></div>
+        <input id="wf-stack-input" class="tag-input" placeholder="#react #node #postgres…"
+          onkeydown="handleWfStackInput(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Steps</label>
+      <div id="wf-steps-list"></div>
+      <button class="btn btn-ghost btn-sm mt-2" onclick="addWorkflowStep()">+ Add step</button>
+    </div>
+    <div class="form-group">
+      <label>Tools used</label>
+      <input type="text" id="wf-tools" class="form-control" placeholder="VS Code, Postman, Docker, GitHub Actions…" maxlength="200">
+    </div>
+    <div class="form-group">
+      <label>GitHub repo link (optional)</label>
+      <input type="url" id="wf-repo" class="form-control" placeholder="https://github.com/you/project">
+    </div>
+    <div class="form-group">
+      <label>Lessons learned (optional)</label>
+      <textarea id="wf-lessons" class="form-control" placeholder="What was hard? What would you do differently?" style="height:80px"></textarea>
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-workflow')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmWorkflow()">Add to post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── POLL MODAL ──────────────────────────────────────────── -->
+<div id="modal-poll" class="modal-overlay" onclick="closeModalOnBg(event,'modal-poll')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">📊 Create Poll</span>
+      <button class="modal-close" onclick="closeModal('modal-poll')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Question</label>
+      <input type="text" id="poll-question" class="form-control" placeholder="Ask the community…" maxlength="140">
+    </div>
+    <div class="form-group">
+      <label>Options</label>
+      <div id="poll-options-list">
+        <input class="form-control mb-2 poll-opt" placeholder="Option 1" maxlength="80">
+        <input class="form-control mb-2 poll-opt" placeholder="Option 2" maxlength="80">
+      </div>
+      <button class="btn btn-ghost btn-sm mt-1" onclick="addPollOption()">+ Add option</button>
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-poll')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmPoll()">Add poll</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── GITHUB REPO MODAL ───────────────────────────────────── -->
+<div id="modal-repo" class="modal-overlay" onclick="closeModalOnBg(event,'modal-repo')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🐙 Share a Repo</span>
+      <button class="modal-close" onclick="closeModal('modal-repo')">×</button>
+    </div>
+    <div class="form-group">
+      <label>GitHub repo URL</label>
+      <input type="url" id="repo-url-input" class="form-control"
+        placeholder="https://github.com/owner/repo"
+        oninput="debounceRepoFetch(this.value)">
+    </div>
+    <div id="repo-fetch-preview" style="margin-bottom:1rem"></div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-repo')">Cancel</button>
+      <button class="btn btn-primary" onclick="confirmRepo()" id="repo-confirm-btn" disabled>Add to post</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── AI ASSIST MODAL ─────────────────────────────────────── -->
+<div id="modal-ai-assist" class="modal-overlay" onclick="closeModalOnBg(event,'modal-ai-assist')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">✨ AI Writing Assistant</span>
+      <button class="modal-close" onclick="closeModal('modal-ai-assist')">×</button>
+    </div>
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:1.1rem">
+      Tell the assistant what you want to write about and it'll give you a draft to work from.
+    </p>
+    <div class="form-group">
+      <label>What do you want to share?</label>
+      <textarea id="ai-assist-prompt" class="form-control"
+        placeholder="e.g. I built a real-time collaborative code editor using WebSockets and React. Share my experience and learnings."
+        style="height:100px"></textarea>
+    </div>
+    <div id="ai-assist-result" class="hidden" style="background:var(--bg2);border:1px solid var(--border2);border-radius:var(--radius);padding:1rem;margin-bottom:1rem;font-size:.88rem;color:var(--text2);line-height:1.65;max-height:200px;overflow-y:auto"></div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-ai-assist')">Cancel</button>
+      <div class="flex gap-2">
+        <button class="btn btn-secondary" id="ai-assist-regen" onclick="runAiAssist()" style="display:none">Regenerate</button>
+        <button class="btn btn-primary" id="ai-assist-btn" onclick="runAiAssist()">Generate</button>
+        <button class="btn btn-green" id="ai-assist-use" onclick="useAiSuggestion()" style="display:none">Use this</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── CREATE WORKSPACE MODAL ─────────────────────────────── -->
+<div id="modal-create-workspace" class="modal-overlay" onclick="closeModalOnBg(event,'modal-create-workspace')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">🏢 Create Workspace</span>
+      <button class="modal-close" onclick="closeModal('modal-create-workspace')">×</button>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Workspace name</label>
+        <input type="text" id="ws-name" class="form-control" placeholder="React Builders" maxlength="60"
+          oninput="autoSlug(this.value)">
+      </div>
+      <div class="form-group">
+        <label>Icon emoji</label>
+        <input type="text" id="ws-emoji" class="form-control" placeholder="⚛️" maxlength="2">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Slug (URL)</label>
+      <div style="display:flex;align-items:center;gap:.5rem">
+        <span style="color:var(--text3);font-family:var(--font-mono);font-size:.82rem">stackr.dev/w/</span>
+        <input type="text" id="ws-slug" class="form-control" placeholder="react-builders" maxlength="40"
+          style="flex:1" oninput="sanitizeSlug(this)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="ws-desc" class="form-control" placeholder="What's this workspace about?" maxlength="300"></textarea>
+    </div>
+    <div class="form-group">
+      <label>Tags</label>
+      <div class="tag-input-wrapper" style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:.6rem .85rem">
+        <div id="ws-tag-chips"></div>
+        <input id="ws-tag-input" class="tag-input" placeholder="#react #typescript…"
+          onkeydown="handleWsTagInput(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Visibility</label>
+      <div style="display:flex;gap:.75rem">
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--text2)">
+          <input type="radio" name="ws-visibility" value="public" checked> 🌐 Public — anyone can join
+        </label>
+        <label style="display:flex;align-items:center;gap:.5rem;cursor:pointer;font-size:.88rem;color:var(--text2)">
+          <input type="radio" name="ws-visibility" value="private"> 🔒 Private — invite only
+        </label>
+      </div>
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-create-workspace')">Cancel</button>
+      <button class="btn btn-primary" onclick="createWorkspace()">Create workspace</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW THREAD MODAL ────────────────────────────────────── -->
+<div id="modal-new-thread" class="modal-overlay" onclick="closeModalOnBg(event,'modal-new-thread')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">🧵 Start a Discussion</span>
+      <button class="modal-close" onclick="closeModal('modal-new-thread')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Title</label>
+      <input type="text" id="thread-title" class="form-control"
+        placeholder="Ask a question or start a technical discussion…" maxlength="200">
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Category</label>
+        <select id="thread-category" class="form-control">
+          <option>Web Dev</option>
+          <option>Mobile</option>
+          <option>AI & ML</option>
+          <option>DevOps</option>
+          <option>Security</option>
+          <option>Open Source</option>
+          <option>Career</option>
+          <option>Hardware</option>
+          <option>Databases</option>
+          <option>Cloud</option>
+          <option>Game Dev</option>
+          <option>General</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Tags (optional)</label>
+        <input type="text" id="thread-tags-input" class="form-control" placeholder="#react #api #help">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Description</label>
+      <textarea id="thread-body" class="form-control"
+        placeholder="Provide context, code snippets, or details…" style="height:140px"></textarea>
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-new-thread')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitThread()">Post thread</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── THREAD VIEW MODAL ───────────────────────────────────── -->
+<div id="modal-thread-view" class="modal-overlay" onclick="closeModalOnBg(event,'modal-thread-view')">
+  <div class="modal modal-xl">
+    <div class="modal-header">
+      <span class="modal-title" id="thread-view-title">Discussion</span>
+      <button class="modal-close" onclick="closeModal('modal-thread-view')">×</button>
+    </div>
+    <input type="hidden" id="thread-view-id">
+    <div id="thread-view-body" style="max-height:50vh;overflow-y:auto;margin-bottom:1rem"></div>
+    <div class="divider"></div>
+    <div class="flex gap-2 mt-3">
+      <textarea id="thread-reply-input" class="form-control" placeholder="Write a reply…" rows="2"
+        style="resize:none"></textarea>
+      <button class="btn btn-primary" style="flex-shrink:0;align-self:flex-end"
+        onclick="submitThreadReply()">Reply</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── REPORT MODAL ────────────────────────────────────────── -->
+<div id="modal-report" class="modal-overlay" onclick="closeModalOnBg(event,'modal-report')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">🚨 Report</span>
+      <button class="modal-close" onclick="closeModal('modal-report')">×</button>
+    </div>
+    <input type="hidden" id="report-target-id">
+    <input type="hidden" id="report-target-type">
+    <p style="font-size:.85rem;color:var(--text2);margin-bottom:1.1rem">
+      Help keep Stackr safe. Reports are reviewed by our team within 24 hours.
+    </p>
+    <div class="form-group">
+      <label>What's the issue?</label>
+      <div id="report-types" style="display:flex;flex-direction:column;gap:.5rem">
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="scam">
+          <span>🧨 Scam — fake giveaway, impersonation, fraud</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="malware">
+          <span>🦠 Malware / virus — malicious code or phishing</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="hacking">
+          <span>🕵️ Malicious hacking — not security research</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="harassment">
+          <span>😡 Harassment — targeting or threatening someone</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="explicit">
+          <span>🔞 Explicit content</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="spam">
+          <span>📢 Spam — repetitive posts or bot behaviour</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="misinformation">
+          <span>❌ Misinformation — deliberately false info</span>
+        </label>
+        <label class="report-type-option">
+          <input type="radio" name="report-type" value="other">
+          <span>Other</span>
+        </label>
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Additional details (optional)</label>
+      <textarea id="report-desc" class="form-control" placeholder="Tell us more…" style="height:80px"></textarea>
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-report')">Cancel</button>
+      <button class="btn btn-danger" onclick="submitReport()">Submit report</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── FOLLOWERS / FOLLOWING MODAL ────────────────────────── -->
+<div id="modal-followers" class="modal-overlay" onclick="closeModalOnBg(event,'modal-followers')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title" id="followers-modal-title">Followers</span>
+      <button class="modal-close" onclick="closeModal('modal-followers')">×</button>
+    </div>
+    <div id="followers-list"></div>
+  </div>
+</div>
+
+<!-- ── EDIT PROFILE MODAL ─────────────────────────────────── -->
+<div id="modal-edit-profile" class="modal-overlay" onclick="closeModalOnBg(event,'modal-edit-profile')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">Edit Profile</span>
+      <button class="modal-close" onclick="closeModal('modal-edit-profile')">×</button>
+    </div>
+    <div class="form-group">
+      <label>Full name</label>
+      <input type="text" id="edit-name" class="form-control" maxlength="60">
+    </div>
+    <div class="form-group">
+      <label>Bio</label>
+      <textarea id="edit-bio" class="form-control" maxlength="280" style="height:80px"></textarea>
+    </div>
+    <div class="grid-2">
+      <div class="form-group">
+        <label>Location</label>
+        <input type="text" id="edit-location" class="form-control" placeholder="Kampala, Uganda" maxlength="60">
+      </div>
+      <div class="form-group">
+        <label>Website</label>
+        <input type="url" id="edit-website" class="form-control" placeholder="https://yoursite.com">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>Role / title</label>
+      <input type="text" id="edit-role" class="form-control" placeholder="Full Stack Developer" maxlength="60">
+    </div>
+    <div class="form-group">
+      <label>Tech stack (press Enter to add)</label>
+      <div class="tag-input-wrapper" style="background:var(--bg2);border:1.5px solid var(--border2);border-radius:var(--radius);padding:.6rem .85rem">
+        <div id="edit-stack-chips"></div>
+        <input id="edit-stack-input" class="tag-input" placeholder="#react #python…"
+          onkeydown="handleEditStackInput(event)">
+      </div>
+    </div>
+    <div class="form-group">
+      <label>GitHub username</label>
+      <input type="text" id="edit-github" class="form-control" placeholder="yourusername">
+    </div>
+    <div class="form-group">
+      <label>Avatar image URL</label>
+      <input type="url" id="edit-avatar" class="form-control" placeholder="https://…">
+    </div>
+    <div class="flex justify-between">
+      <button class="btn btn-ghost" onclick="closeModal('modal-edit-profile')">Cancel</button>
+      <button class="btn btn-primary" onclick="saveProfile()">Save changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ── COMMENTS MODAL ─────────────────────────────────────── -->
+<div id="modal-comments" class="modal-overlay" onclick="closeModalOnBg(event,'modal-comments')">
+  <div class="modal modal-lg">
+    <div class="modal-header">
+      <span class="modal-title">💬 Comments</span>
+      <button class="modal-close" onclick="closeModal('modal-comments')">×</button>
+    </div>
+    <input type="hidden" id="comments-post-id">
+    <div id="comments-list" style="max-height:400px;overflow-y:auto;margin-bottom:1rem"></div>
+    <div class="divider"></div>
+    <div class="flex gap-2 mt-3">
+      <div id="comment-composer-avatar">
+        <div class="avatar avatar-sm" style="background:var(--bg3)">?</div>
+      </div>
+      <div style="flex:1">
+        <textarea id="comment-input" class="form-control" placeholder="Write a comment…"
+          rows="2" style="resize:none" maxlength="500"></textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:.5rem">
+          <button class="btn btn-primary btn-sm" onclick="submitComment()">Post</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ── NEW MESSAGE MODAL ──────────────────────────────────── -->
+<div id="modal-new-message" class="modal-overlay" onclick="closeModalOnBg(event,'modal-new-message')">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">💬 New Message</span>
+      <button class="modal-close" onclick="closeModal('modal-new-message')">×</button>
+    </div>
+    <p style="font-size:.82rem;color:var(--text3);margin-bottom:1rem;font-family:var(--font-mono)">
+      You can only message people who follow you back.
+    </p>
+    <div class="form-group">
+      <label>Search mutual follows</label>
+      <input type="text" id="new-msg-search" class="form-control" placeholder="@username…"
+        oninput="searchMutualFollows(this.value)">
+    </div>
+    <div id="mutual-follows-list" style="max-height:240px;overflow-y:auto"></div>
+  </div>
+</div>
+
+<!-- Inline styles for report type options -->
+<style>
+.report-type-option {
+  display: flex;
+  align-items: center;
+  gap: .6rem;
+  padding: .55rem .75rem;
+  border-radius: var(--radius);
+  cursor: pointer;
+  font-size: .85rem;
+  color: var(--text2);
+  border: 1px solid transparent;
+  transition: all .15s;
+}
+.report-type-option:hover { background: var(--bg3); border-color: var(--border2); }
+.report-type-option input[type="radio"] { accent-color: var(--accent); }
+.report-type-option:has(input:checked) {
+  background: var(--accent-l);
+  border-color: rgba(124,110,255,.25);
+  color: var(--text);
+}
+.section-panel { display: flex; flex-direction: column; }
+</style>
+
+<!-- ── APP JS ──────────────────────────────────────────────── -->
+<script src="app.js"></script>
+
+</body>
+</html>
