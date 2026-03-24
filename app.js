@@ -207,6 +207,11 @@ async function loadProfile() {
 
   if (data) {
     App.profile = data;
+    // Auto-grant admin to owner email
+    if (data.email === 'kuteesajoshua200@gmail.com' && !data.is_admin) {
+      await sb.from('profiles').update({ is_admin: true }).eq('id', App.user.id);
+      App.profile.is_admin = true;
+    }
   } else if (error?.code === 'PGRST116') {
     // Profile missing — shouldn't happen with trigger but handle gracefully
     const meta = App.user.user_metadata || {};
@@ -229,6 +234,7 @@ async function loadProfile() {
 
 // ── ENTER APP ─────────────────────────────────────────────────
 function enterApp() {
+  App.isGuest = false;
   showPage('feed');
   updateSidebarProfile();
   loadFeed();
@@ -1327,6 +1333,7 @@ function openAiAssist() {
 }
 
 async function runAiAssist() {
+  if (!checkAiRateLimit()) return;
   const prompt = $('#ai-assist-prompt')?.value.trim();
   if (!prompt) { toast('Describe what you want to write', 'error'); return; }
 
@@ -3033,8 +3040,44 @@ function handleUrlParams() {
   }
 }
 
+
+// ── THEME TOGGLE (dark / light mode) ─────────────────────────
+function toggleTheme() {
+  const isLight = document.body.classList.toggle('light-mode');
+  const btn = $('#theme-btn');
+  if (btn) btn.textContent = isLight ? '☀️' : '🌙';
+  localStorage.setItem('stackr-theme', isLight ? 'light' : 'dark');
+}
+
+function initTheme() {
+  const saved = localStorage.getItem('stackr-theme');
+  if (saved === 'light') {
+    document.body.classList.add('light-mode');
+    const btn = $('#theme-btn');
+    if (btn) btn.textContent = '☀️';
+  }
+}
+
+// ── DEEPSEEK / AI RATE LIMITER ────────────────────────────────
+// Lightweight use only — max 5 AI calls per user per hour
+const _aiCallLog = [];
+const AI_CALL_LIMIT = 5;
+
+function checkAiRateLimit() {
+  const now = Date.now();
+  // Remove calls older than 1 hour
+  while (_aiCallLog.length && now - _aiCallLog[0] > 3600000) _aiCallLog.shift();
+  if (_aiCallLog.length >= AI_CALL_LIMIT) {
+    toast(`AI assist limited to ${AI_CALL_LIMIT} uses per hour to keep it free for everyone 🙏`, 'info', 5000);
+    return false;
+  }
+  _aiCallLog.push(now);
+  return true;
+}
+
 // ── INIT ──────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  initTheme();
   initAuth();
   handleUrlParams();
 });

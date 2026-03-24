@@ -179,7 +179,10 @@
 
       <div class="topnav">
         <span class="topnav-title">Home</span>
-        <button class="btn btn-primary btn-sm" onclick="focusComposer()">+ Post</button>
+        <div style="display:flex;align-items:center;gap:.5rem">
+          <button class="theme-toggle" onclick="toggleTheme()" title="Toggle light/dark mode" id="theme-btn">🌙</button>
+          <button class="btn btn-primary btn-sm" onclick="focusComposer()">+ Post</button>
+        </div>
       </div>
 
       <!-- Guest banner -->

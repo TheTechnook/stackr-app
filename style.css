@@ -2380,3 +2380,113 @@ select.form-control option { background: var(--bg2); }
   .feed-tabs { overflow-x: auto; }
   .feed-tabs::-webkit-scrollbar { display: none; }
 }
+
+/* ================================================================
+   LIGHT MODE — applied when body has class "light-mode"
+   ================================================================ */
+body.light-mode {
+  --bg:         #f4f4f8;
+  --bg1:        #ffffff;
+  --bg2:        #f0f0f5;
+  --bg3:        #e8e8f0;
+  --bg4:        #dcdcec;
+  --border:     #dcdce8;
+  --border2:    #c8c8dc;
+  --border3:    #b4b4cc;
+  --text:       #0d0d18;
+  --text2:      #4a4a6a;
+  --text3:      #8888aa;
+  --text4:      #aaaacc;
+  --accent-l:   rgba(124,110,255,.12);
+  --accent-l2:  rgba(124,110,255,.06);
+  --shadow-sm:  0 1px 3px rgba(0,0,0,.1);
+  --shadow:     0 2px 12px rgba(0,0,0,.12), 0 0 0 1px rgba(0,0,0,.04);
+  --shadow-lg:  0 8px 40px rgba(0,0,0,.15), 0 0 0 1px rgba(0,0,0,.06);
+}
+body.light-mode .sidebar,
+body.light-mode .right-panel { background: #ffffff; }
+body.light-mode .topnav { background: rgba(244,244,248,.92); }
+body.light-mode .modal { background: #ffffff; box-shadow: var(--shadow-lg); }
+body.light-mode .post-card { background: #ffffff; }
+body.light-mode .auth-modal { background: #ffffff; }
+body.light-mode .landing-nav { background: rgba(244,244,248,.9); }
+
+/* Theme toggle button */
+.theme-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: 1px solid var(--border2);
+  background: var(--bg3);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all .15s;
+  flex-shrink: 0;
+}
+.theme-toggle:hover { background: var(--accent-l); border-color: var(--accent); }
+
+/* ================================================================
+   DESKTOP LAYOUT FIXES (1024px+)
+   ================================================================ */
+@media (min-width: 769px) {
+  .feed-area {
+    max-width: 680px;
+    width: 100%;
+  }
+  .app-shell {
+    display: grid;
+    grid-template-columns: var(--sidebar-w) 1fr var(--right-w);
+    min-height: 100vh;
+    max-width: 1440px;
+    margin: 0 auto;
+    width: 100%;
+  }
+  /* Workspace view full width on desktop */
+  #section-workspaces .workspace-view,
+  #workspace-view {
+    max-width: 100%;
+    width: 100%;
+  }
+  /* Vibe results 3 columns properly on desktop */
+  .vibe-results {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.25rem;
+    padding: 1.25rem 1.5rem;
+  }
+}
+
+/* Fix workspace shrinking on desktop */
+#section-workspaces {
+  width: 100%;
+  min-width: 0;
+}
+.workspace-card {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Section panels take full available width */
+.section-panel {
+  width: 100%;
+  min-width: 0;
+  overflow-x: hidden;
+}
+
+/* Fix feed area on large screens */
+@media (min-width: 1200px) {
+  .feed-area {
+    max-width: none;
+    width: 100%;
+  }
+}
+
+/* Ensure main area doesn't collapse */
+.feed-area, #main-area {
+  min-width: 0;
+  width: 100%;
+  overflow-x: hidden;
+}
