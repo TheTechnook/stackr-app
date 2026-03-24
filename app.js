@@ -6,8 +6,8 @@
 
 // ── CONFIG ───────────────────────────────────────────────────
 const CONFIG = {
-  SUPABASE_URL:  'https://gcnfwwpcvcmrmxefchsb.supabase.co',
-  SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdjbmZ3d3BjdmNtcm14ZWZjaHNiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM3NTQyNDcsImV4cCI6MjA4OTMzMDI0N30.804xXlRn12A-lZfiS7OT3pKq_WQVp14lSP3MI0H8qqY',
+  SUPABASE_URL:  'https://ubfdzrhrbomeqjkyvhlv.supabase.co',
+  SUPABASE_ANON: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InViZmR6cmhyYm9tZXFqa3l2aGx2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQzNDY0NDUsImV4cCI6MjA4OTkyMjQ0NX0.vgBvEYNMj_KTiVgSgOSKDoHuxZ5jC_N-NBptQyrtkPQ',
   // Claude API key lives in Supabase Edge Function — never here
   // GitHub OAuth secret lives in Supabase dashboard — never here
 };
@@ -1635,7 +1635,6 @@ async function loadNotifications(type = 'all', tabEl = null) {
     .eq('user_id', App.user.id).eq('is_read', false);
   setbadge('notif-badge', 0);
 }
-const setbadge = setBadge;
 
 async function markNotifRead(id) {
   await sb.from('notifications').update({ is_read: true }).eq('id', id);
