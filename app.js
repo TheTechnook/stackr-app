@@ -235,6 +235,7 @@ async function loadProfile() {
 // ── ENTER APP ─────────────────────────────────────────────────
 function enterApp() {
   App.isGuest = false;
+  $('#signout-btn')?.classList.remove('hidden');
   showPage('feed');
   updateSidebarProfile();
   loadFeed();
@@ -929,12 +930,36 @@ async function reactPost(postId, type, btn) {
     if (existing) {
       await sb.from('post_reactions').delete().eq('id', existing.id);
       btn.classList.remove('active','liked');
+      // Update like count in DOM immediately
+      if (type === 'like') {
+        const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+        if (postEl) {
+          postEl.querySelectorAll('.rxn-btn span, .post-action-btn span').forEach(el => {
+            const n = parseInt(el.textContent.replace(/[^0-9]/g,''));
+            if (!isNaN(n) && el.closest('button')?.textContent.includes('❤')) {
+              el.textContent = formatNumber(Math.max(0, n - 1));
+            }
+          });
+        }
+      }
     } else {
       await sb.from('post_reactions').insert({ post_id:postId, user_id:App.user.id, reaction_type:type });
       btn.classList.add('active');
-      if (type === 'like') btn.classList.add('liked');
+      if (type === 'like') {
+        btn.classList.add('liked');
+        // Update like count in DOM immediately
+        const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+        if (postEl) {
+          postEl.querySelectorAll('.rxn-btn span, .post-action-btn span').forEach(el => {
+            const n = parseInt(el.textContent.replace(/[^0-9]/g,''));
+            if (!isNaN(n) && el.closest('button')?.textContent.includes('❤')) {
+              el.textContent = formatNumber(n + 1);
+            }
+          });
+        }
+      }
     }
-  } catch {}
+  } catch(e) { console.error('React error:', e); }
 }
 
 // ── POLL VOTE ─────────────────────────────────────────────────
@@ -1576,9 +1601,8 @@ async function submitComment() {
   const body   = $('#comment-input')?.value.trim();
   if (!body || !postId) return;
 
-  // Moderate
-  const mod = await moderateContent(body);
-  if (mod.result === 'block') { toast(`Comment blocked: ${mod.reason}`, 'error', 5000); return; }
+  // Skip heavy AI moderation for comments (speed) — basic length check only
+  if (body.length > 500) { toast('Comment too long (max 500 chars)', 'error'); return; }
 
   const { error } = await sb.from('comments').insert({
     post_id: postId, user_id: App.user.id, body
@@ -1587,7 +1611,17 @@ async function submitComment() {
   if (error) { toast(error.message, 'error'); return; }
   $('#comment-input').value = '';
   openComments(postId); // refresh
-  toast('Comment posted', 'success');
+
+  // Update comment count immediately in feed DOM
+  const postEl = document.querySelector(`[data-post-id="${postId}"]`);
+  if (postEl) {
+    const countEl = postEl.querySelector('.post-action-btn:nth-child(2) span');
+    if (countEl) {
+      const current = parseInt(countEl.textContent.replace(/[^0-9]/g,'')) || 0;
+      countEl.textContent = formatNumber(current + 1);
+    }
+  }
+  toast('Comment posted! 💬', 'success');
 }
 
 // ── NOTIFICATIONS ─────────────────────────────────────────────
@@ -1713,12 +1747,11 @@ async function openChat(partnerId) {
   if (!partner) return;
   App.chatPartner = partner;
 
-  // Verify mutual follow
-  const { data: mutual } = await sb.rpc('are_mutual_follows', {
-    user_a: App.user.id, user_b: partnerId
-  });
-  if (!mutual) {
-    toast('You both need to follow each other to message', 'info', 4000);
+  // Verify sender follows receiver (one-way is enough to message)
+  const { data: followCheck } = await sb.from('follows')
+    .select('id').eq('follower_id', App.user.id).eq('following_id', partnerId).single();
+  if (!followCheck) {
+    toast('You need to follow this person to message them', 'info', 4000);
     return;
   }
 
@@ -1856,6 +1889,7 @@ function filterConversations(q) {
 // ── FOLLOW / UNFOLLOW ─────────────────────────────────────────
 async function toggleFollow(userId, btn) {
   if (!App.user || App.isGuest) { openAuthModal(); return; }
+  if (userId === App.user.id) { toast("You can't follow yourself", 'info'); return; }
 
   const { data: existing } = await sb.from('follows')
     .select('id').eq('follower_id', App.user.id).eq('following_id', userId).single();
@@ -2599,9 +2633,6 @@ async function submitThread() {
   const body     = $('#thread-body')?.value.trim();
   if (!title || !body) { toast('Title and description are required', 'error'); return; }
 
-  const mod = await moderateContent(title + ' ' + body);
-  if (mod.result === 'block') { toast(`Blocked: ${mod.reason}`, 'error', 5000); return; }
-
   const tagsRaw  = $('#thread-tags-input')?.value || '';
   const tags     = tagsRaw.match(/#[\w]+/g)?.map(t => t.slice(1).toLowerCase()) || [];
 
@@ -2620,9 +2651,6 @@ async function submitThreadReply() {
   const threadId = $('#thread-view-id')?.value;
   const body     = $('#thread-reply-input')?.value.trim();
   if (!body || !threadId) return;
-
-  const mod = await moderateContent(body);
-  if (mod.result === 'block') { toast(`Blocked: ${mod.reason}`, 'error', 5000); return; }
 
   const { error } = await sb.from('thread_replies').insert({
     thread_id: threadId, user_id: App.user.id, body
@@ -2988,7 +3016,7 @@ function closeModalOnBg(e, id) {
 
 // Close dropdowns on outside click
 document.addEventListener('click', (e) => {
-  if (!e.target.closest('.dropdown')) {
+  if (!e.target.closest('.dropdown') && !e.target.closest('[onclick*="toggleDropdown"]')) {
     $$('.dropdown-menu.open').forEach(m => m.classList.remove('open'));
   }
 });
